@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 
 @Controller
-@CrossOrigin(origins = "https://cursachaviahorizon-production.up.railway.app/")
+@CrossOrigin(origins = "*")
 @RequestMapping("/")
 public class MainController {
 

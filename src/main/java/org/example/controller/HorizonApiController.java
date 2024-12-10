@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 @RestController
-@CrossOrigin(origins = "https://cursachaviahorizon-production.up.railway.app/")
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/horizons")
 public class HorizonApiController {
 
