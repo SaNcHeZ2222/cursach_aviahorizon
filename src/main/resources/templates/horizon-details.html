@@ -226,7 +226,7 @@
                 const compatibilityList = document.getElementById('compatibility-list');
 
                 function fetchCompatibility(horizonId) {
-                    fetch(`https://cursachaviahorizon-production.up.railway.appapi/horizons/${horizonId}/compatibilities`)
+                    fetch(`https://cursachaviahorizon-production.up.railway.app/api/horizons/${horizonId}/compatibilities`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error(`Ошибка загрузки: ${response.statusText}`);
@@ -287,7 +287,7 @@
                 };
 
                 function fetchSpecificationsTranslated(horizonId) {
-                    fetch(`https://cursachaviahorizon-production.up.railway.appapi/horizons/${horizonId}/specifications`)
+                    fetch(`https://cursachaviahorizon-production.up.railway.app/api/horizons/${horizonId}/specifications`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error(`Ошибка загрузки: ${response.statusText}`);
