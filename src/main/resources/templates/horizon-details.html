@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали AviHorizon</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2, h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        #back-button {
+            margin-top: 20px;
+            padding: 12px 18px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        #back-button:hover {
+            background-color: #0056b3;
+        }
+
+        #horizon-details, #manufacturer-details, #specifications-section, #horizon-certificates, #compatibility-section {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        #horizon-details p, #manufacturer-details p {
+            margin: 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+
+        td {
+            color: #555;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        .material-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .material-button:hover {
+            background-color: #0056b3;
+        }
+
+        #compatibility-list li {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        #compatibility-list li strong {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Детали AviHorizon</h1>
+
+    <div id="horizon-details">
+        <p><strong>Марка:</strong> <span id="horizon-brand"></span></p>
+        <p><strong>Модель:</strong> <span id="horizon-model"></span></p>
+        <p><strong>Описание:</strong> <span id="horizon-description"></span></p>
+        <p><strong>Статус производства:</strong> <span id="horizon-production-status"></span></p>
+        <p><strong>Год выпуска:</strong> <span id="horizon-year-of-manufacture"></span></p>
+    </div>
+
+    <div id="manufacturer-details">
+        <h2>Производитель</h2>
+        <p><strong>Название:</strong> <span id="manufacturer-name"></span></p>
+        <p><strong>Контактные данные:</strong> <span id="manufacturer-contact"></span></p>
+        <p><strong>Страна:</strong> <span id="manufacturer-country"></span></p>
+        <p><strong>Веб-сайт:</strong> <a href="" id="manufacturer-website" target="_blank">Перейти на сайт</a></p>
+    </div>
+
+    <div id="specifications-section">
+        <h2>Технические характеристики</h2>
+        <table id="specifications-table" border="1">
+            <thead>
+            <tr>
+                <th>Параметр</th>
+                <th>Значение</th>
+            </tr>
+            </thead>
+            <tbody id="specifications-body"></tbody>
+        </table>
+    </div>
+
+    <div id="horizon-certificates">
+        <h2>Сертификаты</h2>
+        <table id="certificates-table">
+            <thead>
+            <tr>
+                <th>Название сертификата</th>
+                <th>Стандарт</th>
+                <th>Дата выдачи</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Данные сертификатов будут загружены сюда -->
+            </tbody>
+        </table>
+        <div id="error-message" class="error"></div>
+    </div>
+
+    <div id="compatibility-section">
+        <h2>Совместимость</h2>
+        <ul id="compatibility-list"></ul>
+    </div>
+
+    <button id="back-button">Вернуться на главный экран</button>
+</div>
+
+<script>
+    $(document).ready(function () {
+        const horizonId = window.location.pathname.split('/').pop();
+
+        // Загружаем данные авиагоризонта
+        $.ajax({
+            url: `/api/horizons/${horizonId}`,
+            method: 'GET',
+            success: function (data) {
+                // console.log(data);
+                // Основные данные
+                $('#horizon-brand').text(data.brand);
+                $('#horizon-model').text(data.model);
+                $('#horizon-description').text(data.description);
+                $('#horizon-production-status').text(data.productionStatus);
+                $('#horizon-year-of-manufacture').text(data.yearOfManufacture);
+
+                // Данные о производителе
+                $('#manufacturer-name').text(data.manufacturer.name);
+                $('#manufacturer-contact').text(data.manufacturer.contactDetails);
+                $('#manufacturer-country').text(data.manufacturer.country);
+                $('#manufacturer-website').attr('href', data.manufacturer.website);
+
+                const certificatesTableBody = document.querySelector('#certificates-table tbody');
+                const errorMessage = document.getElementById('error-message');
+
+
+                // Загружаем данные сертификатов из бэкенда
+                fetch(`http://localhost:8080/api/horizons/${horizonId}/certificates`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Ошибка загрузки: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.length === 0) {
+                            certificatesTableBody.innerHTML = '<tr><td colspan="4">Сертификаты не найдены.</td></tr>';
+                            return;
+                        }
+
+                        // Добавляем строки в таблицу
+                        // console.log(data);
+                        data.forEach(cert => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+<!--                    <td>${cert.id}</td>-->
+                    <td>${cert.certificate_name}</td>
+                    <td>${cert.standart || '—'}</td>
+                    <td>${cert.issuanceDate || '—'}</td>
+                `;
+                            certificatesTableBody.appendChild(row);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                        errorMessage.textContent = 'Не удалось загрузить данные сертификатов.';
+                    });
+
+                fetchCompatibility(horizonId);
+
+                const compatibilityList = document.getElementById('compatibility-list');
+
+                function fetchCompatibility(horizonId) {
+                    fetch(`http://localhost:8080/api/horizons/${horizonId}/compatibilities`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Ошибка загрузки: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            compatibilityList.innerHTML = ''; // Очищаем список
+                            if (data.length === 0) {
+                                compatibilityList.innerHTML = '<li>Данные о совместимости не найдены.</li>';
+                                return;
+                            }
+                            data.forEach(compatibility => {
+                                const listItem = document.createElement('li');
+                                listItem.innerHTML = `
+                    <strong>Тип самолёта:</strong> ${compatibility.aircraftType}<br>
+                    <strong>Совместимость автопилота:</strong> ${compatibility.autopilotCompatibility || 'Нет данных'}
+                `;
+                                compatibilityList.appendChild(listItem);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Ошибка:', error);
+                            compatibilityList.innerHTML = '<li>Не удалось загрузить данные о совместимости.</li>';
+                        });
+                }
+
+                fetchSpecificationsTranslated(horizonId)
+
+                const specificationsTableBody = document.getElementById('specifications-body');
+
+                const translations = {
+                    minOperatingTemperature: "Минимальная рабочая температура",
+                    maxOperatingTemperature: "Максимальная рабочая температура",
+                    minStorageTemperature: "Минимальная температура хранения",
+                    maxStorageTemperature: "Максимальная температура хранения",
+                    operatingVoltage: "Рабочее напряжение (В)",
+                    powerConsumption: "Потребляемая мощность (Вт)",
+                    maxOverload: "Максимальная перегрузка (g)",
+                    minAngleRoll: "Минимальный угол крена (градусы)",
+                    maxAngleRoll: "Максимальный угол крена (градусы)",
+                    minAnglePitch: "Минимальный угол тангажа (градусы)",
+                    maxAnglePitch: "Максимальный угол тангажа (градусы)",
+                    accuracy: "Точность (градусы)",
+                    responseSpeed: "Скорость реакции (мс)",
+                    width: "Ширина (мм)",
+                    height: "Высота (мм)",
+                    depth: "Глубина (мм)",
+                    weight: "Вес (г)",
+                    protectionLevel: "Уровень защиты",
+                    vibrationResistance: "Сопротивление вибрации (Гц)",
+                    material: "Материал",
+                    mountingType: "Тип крепления",
+                    radiationResistance: "Устойчивость к радиации (мЗв/час)",
+                    altitudeOperability: "Рабочая высота (м)",
+                    diagnosticSupport: "Поддержка диагностики",
+                    autoCalibration: "Автокалибровка"
+                };
+
+                function fetchSpecificationsTranslated(horizonId) {
+                    fetch(`http://localhost:8080/api/horizons/${horizonId}/specifications`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Ошибка загрузки: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            specificationsTableBody.innerHTML = ''; // Очищаем таблицу
+
+                            if (data.length === 0) {
+                                const row = document.createElement('tr');
+                                row.innerHTML = '<td colspan="2">Данные о характеристиках не найдены.</td>';
+                                specificationsTableBody.appendChild(row);
+                                return;
+                            }
+
+                            const specs = data[0]; // Предполагается, что спецификации уникальны для горизонта
+
+                            Object.keys(specs).forEach(key => {
+                                if (key !== 'id' && key !== 'horizon') {
+                                    const row = document.createElement('tr');
+                                    const translatedKey = translations[key] || key; // Используем перевод, если он есть
+                                    const translatedValue = typeof specs[key] === "boolean"
+                                        ? (specs[key] ? "Да" : "Нет")
+                                        : specs[key];
+                                    row.innerHTML = `<td>${translatedKey}</td><td>${translatedValue || 'Нет данных'}</td>`;
+                                    specificationsTableBody.appendChild(row);
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Ошибка:', error);
+                            specificationsTableBody.innerHTML = '<tr><td colspan="2">Не удалось загрузить данные о характеристиках.</td></tr>';
+                        });
+                }
+
+            },
+            error: function () {
+                alert('Не удалось загрузить данные авиагоризонта.');
+            }
+        });
+
+
+        // Кнопка возврата
+        $('#back-button').click(function () {
+            window.location.href = '/';
+        });
+    });
+</script>
+</body>
+</html>

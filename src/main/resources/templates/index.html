@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>AviHorizons</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+
+        #filter-container h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        #filter-container label {
+            margin-right: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        #filter-container input[type="number"] {
+            padding: 8px;
+            margin-right: 10px;
+            font-size: 14px;
+            width: 120px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #filter-container button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px;
+        }
+
+        #filter-container button:hover {
+            background-color: #45a049;
+        }
+
+        #show-all-btn {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        #show-all-btn:hover {
+            background-color: #0056b3;
+        }
+
+        #all-horizons-container {
+            width: 80%;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            color: #333;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .view-btn {
+            padding: 6px 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .view-btn:hover {
+            background-color: #218838;
+        }
+
+        @media (max-width: 768px) {
+            #filter-container, #all-horizons-container {
+                width: 95%;
+            }
+            h1 {
+                font-size: 24px;
+            }
+        }
+
+        #filter-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #form-container {
+            display: inline-block; /* Контейнер будет иметь размер по содержимому */
+            padding: 20px;
+            background-color: white; /* Белый фон */
+            border-radius: 8px; /* Закругленные углы */
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Легкая тень */
+        }
+
+        #accuracy-filter-form {
+            display: flex;
+            flex-direction: column; /* Элементы расположены вертикально */
+            gap: 10px; /* Отступы между элементами */
+            width: 200px; /* Ограничение ширины формы */
+            max-width: 100%; /* Чтобы форма не выходила за пределы родительского контейнера */
+        }
+
+        #accuracy-filter-form label {
+            margin-bottom: 5px; /* Отступ снизу для метки */
+        }
+
+        #accuracy-filter-form input,
+        #accuracy-filter-form button {
+            width: 100%; /* Растягиваем поля ввода и кнопку на всю доступную ширину */
+            box-sizing: border-box;
+        }
+
+    </style>
+</head>
+<body>
+<h1>Авиагоризонты</h1>
+
+<div id="filter-container">
+    <h2>Фильтр по точности</h2>
+    <div id="form-container">
+        <form id="accuracy-filter-form">
+            <label for="min-accuracy">Минимальная точность:</label>
+            <input type="number" id="min-accuracy" name="minAccuracy" step="0.01" placeholder="0.00">
+            <label for="max-accuracy">Максимальная точность:</label>
+            <input type="number" id="max-accuracy" name="maxAccuracy" step="0.01" placeholder="1.00">
+            <button type="submit">Применить фильтр</button>
+        </form>
+    </div>
+</div>
+
+<!-- Кнопка для отображения всех авиагоризонтов -->
+<button id="show-all-btn">Показать все авиагоризонты</button>
+
+<div id="all-horizons-container" style="display: none;">
+    <h2>Список авиагоризонтов</h2>
+    <table id="all-horizons-table">
+        <thead>
+        <tr>
+            <th>Марка</th>
+            <th>Модель</th>
+            <th>Описание</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Функция для отображения авиагоризонтов
+        function displayHorizons(data) {
+            const tableBody = $('#all-horizons-table tbody');
+            tableBody.empty();
+            if (data.length === 0) {
+                tableBody.append('<tr><td colspan="4">Нет данных для отображения.</td></tr>');
+            } else {
+                data.forEach(function (horizon) {
+                    tableBody.append(`
+                        <tr>
+                            <td>${horizon.brand}</td>
+                            <td>${horizon.model}</td>
+                            <td>${horizon.description}</td>
+                            <td>
+                                <button class="view-btn" data-id="${horizon.id}">Открыть</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+                $('.view-btn').click(function () {
+                    const horizonId = $(this).data('id');
+                    window.location.href = `/horizons/${horizonId}`;
+                });
+            }
+            $('#all-horizons-container').show();
+        }
+
+        // Показать все авиагоризонты
+        $('#show-all-btn').click(function () {
+            $.ajax({
+                url: '/api/horizons/all',
+                method: 'GET',
+                success: function (data) {
+                    displayHorizons(data);
+                },
+                error: function () {
+                    alert('Не удалось загрузить список авиагоризонтов.');
+                }
+            });
+        });
+
+        // Фильтрация по точности
+        $('#accuracy-filter-form').submit(function (event) {
+            event.preventDefault(); // Предотвратить отправку формы
+            const minAccuracy = $('#min-accuracy').val();
+            const maxAccuracy = $('#max-accuracy').val();
+
+            $.ajax({
+                url: '/api/horizons/filter',
+                method: 'GET',
+                data: { minAccuracy, maxAccuracy },
+                success: function (data) {
+                    displayHorizons(data);
+                },
+                error: function () {
+                    alert('Не удалось применить фильтр.');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
+
+
+
